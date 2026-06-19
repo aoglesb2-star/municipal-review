@@ -273,14 +273,18 @@ CITY CODE — {city_name.upper()} — TITLE {title_num}:
 {city_code.strip()}
 
 INSTRUCTIONS:
-1. For each numbered item in the standard checklist above, determine whether it applies to this city's code:
-   - APPLIES: The city's code has the problematic section/pattern described
-   - DOES NOT APPLY: The section is missing, already correct, or the issue is irrelevant for this city
-   - Include ONLY items that APPLY in your output
 
-2. For each applicable standard issue, extract the relevant section text verbatim from the city's code (up to ~300 words). If the section is very long, extract the most relevant portion.
+STEP 1 — FILTER THE CHECKLIST (critical):
+Read each numbered checklist item carefully. Ask yourself: does the city's actual code contain the specific problematic section, language, or pattern described?
+  - INCLUDE the item ONLY if the exact problem is present in the city's code.
+  - DO NOT include an item if: the city does not have that section at all, the city already uses the recommended language, or the issue simply does not arise in this city's code.
+  - DO NOT include an item just because the topic exists; the specific defect described must be present.
 
-3. Also identify any issues in the city's code NOT covered by the standard checklist (new findings). Use your knowledge of Tennessee municipal law.
+STEP 2 — EXTRACT SECTION TEXT:
+For each item you include, copy the relevant verbatim text from the city's code (up to ~300 words). If the section is absent, set section_text to null.
+
+STEP 3 — NEW FINDINGS:
+Identify issues in the city's code that are NOT covered by the checklist. Use your knowledge of Tennessee municipal law. These are optional — only include genuine problems.
 
 Return a JSON array. Each element must have these exact fields:
   - "title": string (e.g. "3")
@@ -291,12 +295,12 @@ Return a JSON array. Each element must have these exact fields:
   - "comment": string (use the standard comment verbatim for checklist items; write your own for new findings)
   - "source": "checklist" or "new_finding"
 
-Return ONLY the JSON array, no other text."""
+Return ONLY the JSON array, no other text. If no issues apply, return an empty array: []"""
 
 
 def call_claude(client: anthropic.Anthropic, prompt: str) -> list[dict]:
     response = client.messages.create(
-        model="claude-sonnet-4-6",
+        model="claude-opus-4-8",
         max_tokens=16000,
         messages=[{"role": "user", "content": prompt}],
     )

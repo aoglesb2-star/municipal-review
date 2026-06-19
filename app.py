@@ -167,21 +167,24 @@ if run_clicked:
     status_area.success(f"Review complete — {len(all_findings)} total findings across {len(titles_to_run)} title(s).")
 
     # Write Excel to memory
-    with tempfile.NamedTemporaryFile(suffix=".xlsx", delete=False) as tmp:
-        tmp_path = Path(tmp.name)
-
-    write_excel(all_findings, city_name.strip(), tmp_path)
-    excel_bytes = tmp_path.read_bytes()
-    tmp_path.unlink(missing_ok=True)
-
     st.session_state["last_findings"] = all_findings
-    st.session_state["last_excel"] = excel_bytes
     st.session_state["last_city"] = city_name.strip()
+    st.session_state["last_excel"] = None
+
+    if all_findings:
+        try:
+            with tempfile.NamedTemporaryFile(suffix=".xlsx", delete=False) as tmp:
+                tmp_path = Path(tmp.name)
+            write_excel(all_findings, city_name.strip(), tmp_path)
+            st.session_state["last_excel"] = tmp_path.read_bytes()
+            tmp_path.unlink(missing_ok=True)
+        except Exception as e:
+            st.warning(f"Results are available below but the Excel file could not be created: {e}")
 
 # ---------------------------------------------------------------------------
 # Results
 # ---------------------------------------------------------------------------
-if st.session_state.get("last_findings"):
+if st.session_state.get("last_findings") is not None:
     findings = st.session_state["last_findings"]
     city = st.session_state["last_city"]
     excel_bytes = st.session_state["last_excel"]
@@ -198,15 +201,16 @@ if st.session_state.get("last_findings"):
     cols[2].metric("New Findings", new_findings)
 
     # Download button
-    date_str = datetime.now().strftime("%Y%m%d")
-    filename = f"{city.replace(' ', '_')}_review_{date_str}.xlsx"
-    st.download_button(
-        label="⬇  Download Excel",
-        data=excel_bytes,
-        file_name=filename,
-        mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-        type="primary",
-    )
+    if excel_bytes:
+        date_str = datetime.now().strftime("%Y%m%d")
+        filename = f"{city.replace(' ', '_')}_review_{date_str}.xlsx"
+        st.download_button(
+            label="⬇  Download Excel",
+            data=excel_bytes,
+            file_name=filename,
+            mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            type="primary",
+        )
 
     st.divider()
 
