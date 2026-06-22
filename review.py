@@ -311,6 +311,12 @@ def call_claude(client: anthropic.Anthropic, prompt: str) -> list[dict]:
     if raw.startswith("```"):
         raw = raw.split("\n", 1)[1] if "\n" in raw else raw[3:]
         raw = raw.rsplit("```", 1)[0].strip()
+    # extract JSON array even if the model added text before/after
+    start = raw.find("[")
+    end = raw.rfind("]")
+    if start == -1 or end == -1:
+        raise ValueError(f"No JSON array found in response. Raw response: {raw[:300]}")
+    raw = raw[start:end + 1]
     return json.loads(raw)
 
 
