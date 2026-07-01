@@ -300,8 +300,9 @@ Return ONLY the JSON array, no other text. If no issues apply, return an empty a
 
 def call_claude(client: anthropic.Anthropic, prompt: str) -> list[dict]:
     response = client.messages.create(
-        model="claude-opus-4-8",
+        model="claude-sonnet-5",
         max_tokens=16000,
+        output_config={"effort": "high"},
         messages=[{"role": "user", "content": prompt}],
     )
     raw = response.content[0].text.strip()
